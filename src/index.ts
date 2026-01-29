@@ -4,6 +4,7 @@ import serverConfig from "./config/serverConfig";
 import redisConnection from "./config/redisConfig";
 import sampleQueueProducer from "./producers/sampleQueueProducer";
 import SampleWorker from "./workers/SampleWorker";
+import serverAdapter from "./config/bullBoardConfig";
 
 const app = express();
 
@@ -13,6 +14,9 @@ async function startserver() {
         // connect Redis
         await redisConnection.ping();
         console.log("Redis is ready");
+
+        app.use("/ui",serverAdapter.getRouter());
+        console.log("Bull dashboard running");
 
         // start express server
         app.listen(serverConfig.PORT, () => {
@@ -25,11 +29,12 @@ async function startserver() {
             name: "Durgesh",
             company: "startup",
             position: "backend"
+
         }, {
             priority: 1,
             attempts: 3,
             backoff: 2000,
-            removeOnComplete: true
+            removeOnComplete: false
         });
 
         SampleWorker("SampleQueue");

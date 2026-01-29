@@ -1,5 +1,4 @@
 import { Job, Worker } from "bullmq";
-// import sampleQueue from "../queues/sampleQueue";
 import redisConnection from "../config/redisConfig";
 import SampleJob from "../jobs/SampleJob";
 

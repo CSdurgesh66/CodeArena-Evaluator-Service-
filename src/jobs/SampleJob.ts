@@ -1,3 +1,5 @@
+// SampleJob.ts is the file that defines how a job is handle
+
 import { Job } from "bullmq";
 
 import { IJob } from "../types/bullMqJobDefinition";
