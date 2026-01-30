@@ -1,12 +1,18 @@
-import express from "express";
+import express,{Express} from "express";
 
 import serverConfig from "./config/serverConfig";
 import redisConnection from "./config/redisConfig";
-import sampleQueueProducer from "./producers/sampleQueueProducer";
 import SampleWorker from "./workers/SampleWorker";
 import serverAdapter from "./config/bullBoardConfig";
+import apiRouter from "./routes";
 
-const app = express();
+const app:Express = express();
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use('/api',apiRouter);
+
 
 async function startserver() {
     try {
@@ -21,20 +27,6 @@ async function startserver() {
         // start express server
         app.listen(serverConfig.PORT, () => {
             console.log(`Server starting at ${serverConfig.PORT}`);
-        });
-
-        
-
-        sampleQueueProducer("SampleJob", {
-            name: "Durgesh",
-            company: "startup",
-            position: "backend"
-
-        }, {
-            priority: 1,
-            attempts: 3,
-            backoff: 2000,
-            removeOnComplete: false
         });
 
         SampleWorker("SampleQueue");
