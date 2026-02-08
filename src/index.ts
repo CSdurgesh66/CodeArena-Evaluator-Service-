@@ -5,7 +5,9 @@ import redisConnection from "./config/redisConfig";
 import SampleWorker from "./workers/SampleWorker";
 import serverAdapter from "./config/bullBoardConfig";
 import apiRouter from "./routes";
-import runPython from "./containers/runPythonDocker";
+// import runPython from "./containers/runPythonDocker";
+// import runJava from "./containers/runJavaDocker";
+import runCpp from "./containers/runCppDocker";
 
 const app: Express = express();
 
@@ -33,12 +35,47 @@ async function startserver() {
         SampleWorker("SampleQueue");
 
 
-        const code = `print("hello, this is container"); a = int(input()); b = int(input()); print(a + b)`;
-        const testcases: string = "20\n60\n";
+const code = `
+#include <iostream>
+#include <vector>
+#include <numeric>
+
+using namespace std;
+
+int main() {
+    int n;
+    
+    // 1. Read the size of the array
+    if (!(cin >> n)) return 0;
+
+    
+    // 2. Read the elements
+    vector<int> arr(n);
+    for (int i = 0; i < n; i++) {
+        cin >> arr[i];
+    }
+    
+    // 3. Process the array (Calculate Sum)
+    long long sum = 0;
+    for (int num : arr) {
+        sum += num;
+    }
+    
+    cout << "Array Size: " << n << endl;
+    cout << "Array Elements: ";
+    for(int x : arr) cout << x << " ";
+    cout << endl;
+    cout << "Sum: " << sum << endl;
+    
+    return 0;
+}
+`;
+const testcases = `5
+10 20 30 40 50`;
 
 
-        let finaloutput = await runPython(code, testcases);
-        console.log("this is final output -> ",finaloutput);
+const finaloutput = await runCpp(code,testcases);
+console.log(finaloutput);
 
 
     } catch (error) {
