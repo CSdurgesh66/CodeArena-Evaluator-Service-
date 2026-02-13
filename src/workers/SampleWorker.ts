@@ -10,8 +10,10 @@ export default function SampleWorker(queueName:string){
             console.log("Sample job worker kicking",job);
             if(job.name === "SampleJob"){
                 const sampleJobInstance  = new SampleJob(job.data);
+                console.log("this is sample worker job",sampleJobInstance);
                 sampleJobInstance.handle(job);
                 return true;
+                // return sampleJobInstance;
             }
         },
         {

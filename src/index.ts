@@ -2,12 +2,13 @@ import express, { Express } from "express";
 
 import serverConfig from "./config/serverConfig";
 import redisConnection from "./config/redisConfig";
-import SampleWorker from "./workers/SampleWorker";
+// import SampleWorker from "./workers/SampleWorker";
 import serverAdapter from "./config/bullBoardConfig";
 import apiRouter from "./routes";
-// import runPython from "./containers/runPythonDocker";
-// import runJava from "./containers/runJavaDocker";
-import runCpp from "./containers/runCppDocker";
+
+import submissionQueueProducer from "./producers/submissionQueueProducer";
+import SubmissionWorker from "./workers/SubmissionWorker";
+import { Submission_Queue } from "./utils/constants";
 
 const app: Express = express();
 
@@ -32,50 +33,47 @@ async function startserver() {
             console.log(`Server starting at ${serverConfig.PORT}`);
         });
 
-        SampleWorker("SampleQueue");
+        // SampleWorker("SampleQueue");
+
+       SubmissionWorker(Submission_Queue);
 
 
 const code = `
 #include <iostream>
-#include <vector>
-#include <numeric>
-
+#include <string>
 using namespace std;
 
 int main() {
-    int n;
-    
-    // 1. Read the size of the array
-    if (!(cin >> n)) return 0;
+    string s;
+    cin >> s;
+    for(int i = s.length() - 1; i >= 0; i--) {
+        cout << s[i];
+    }
 
-    
-    // 2. Read the elements
-    vector<int> arr(n);
-    for (int i = 0; i < n; i++) {
-        cin >> arr[i];
-    }
-    
-    // 3. Process the array (Calculate Sum)
-    long long sum = 0;
-    for (int num : arr) {
-        sum += num;
-    }
-    
-    cout << "Array Size: " << n << endl;
-    cout << "Array Elements: ";
-    for(int x : arr) cout << x << " ";
-    cout << endl;
-    cout << "Sum: " << sum << endl;
-    
     return 0;
 }
 `;
-const testcases = `5
-10 20 30 40 50`;
+
+const inputCase = "hello";
+
+        submissionQueueProducer("SubmissionJob", {
+            language:"cpp",
+            inputCase,
+            code
+        })
 
 
-const finaloutput = await runCpp(code,testcases);
-console.log(finaloutput);
+        // sampleQueueProducer("SampleJob", {
+        //     name: "Durgesh",
+        //     company: "startup",
+        //     position: "backend"
+        // }, {
+        //     priority: 1,
+        //     attempts: 3,
+        //     backoff: 2000,
+        //     removeOnComplete: true
+        // });
+
 
 
     } catch (error) {

@@ -1,7 +1,7 @@
 
 
 import { PYTHON_IMAGE } from "../utils/constants";
-
+import DockerStreamOutput from "../types/dockerStreamOutput";
 import createContainer from "./containerFactory";
 import decodeDockerStream from "./dockerHelper";
 
@@ -9,18 +9,21 @@ import decodeDockerStream from "./dockerHelper";
 
 const TIMELIMIT = 2000;
 
-async function runPython(code: string, testcases: string) {
+async function runPython(code: string, inputCase: string) {
 
     console.log("Initialising a new docker container");
 
     const b64Code = Buffer.from(code).toString('base64');
-    const b64Input = Buffer.from(testcases || "").toString('base64');
+    const b64Input = Buffer.from(inputCase || "").toString('base64');
 
     const cmd = ['/bin/sh', '-c', `echo "${b64Code}" | base64 -d > main.py && echo "${b64Input}" | base64 -d > input.txt && python -u main.py < input.txt`];
     const pythonDockerContainer = await createContainer(PYTHON_IMAGE, cmd);
 
     console.log(" Starting container");
     await pythonDockerContainer.start();
+
+
+    let timerId: NodeJS.Timeout;
 
 
     const outputPromise = new Promise((resolve, reject) => {
@@ -48,14 +51,16 @@ async function runPython(code: string, testcases: string) {
     });
 
     const timeoutPromise = new Promise<{ stdout: string, stderr: string }>((_, reject) => {
-        setTimeout(() => {
-            reject(new Error("Time Limit Exceeded"));
+        timerId = setTimeout(() => {
+            reject(new Error("TLE"));
         }, TIMELIMIT);
     });
 
     try {
         
-        const finalOutput = await Promise.race([outputPromise, timeoutPromise]);
+        const finalOutput: DockerStreamOutput = await Promise.race([outputPromise, timeoutPromise]) as DockerStreamOutput;
+
+        clearTimeout(timerId!);
         console.log("Execution finished successfully");
         await pythonDockerContainer.remove();
 
