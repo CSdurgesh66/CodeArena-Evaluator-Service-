@@ -1,14 +1,10 @@
-// strategy/JavaExecutionStrategy.ts
-
-
 import runJava from "../containers/runJavaDocker";
 import { CodeExecutionStrategy } from "../types/CodeExecutionStrategy";
-import DockerStreamOutput from "../types/dockerStreamOutput";
 
 export class JavaExecutionStrategy implements CodeExecutionStrategy{
 
-    async run(code: string, inputCase: string): Promise<DockerStreamOutput> {
-        return runJava(code, inputCase);
+    async run(code: string, inputCase: string,outputCase:string){
+        return runJava(code, inputCase,outputCase);
     }
 
 }

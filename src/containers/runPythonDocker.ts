@@ -7,9 +7,9 @@ import decodeDockerStream from "./dockerHelper";
 
 
 
-const TIMELIMIT = 2000;
+const TIMELIMIT = 5000;
 
-async function runPython(code: string, inputCase: string) {
+async function runPython(code: string, inputCase: string,outputCase:string) {
 
     console.log("Initialising a new docker container");
 
@@ -61,13 +61,26 @@ async function runPython(code: string, inputCase: string) {
         const finalOutput: DockerStreamOutput = await Promise.race([outputPromise, timeoutPromise]) as DockerStreamOutput;
 
         clearTimeout(timerId!);
+        await pythonDockerContainer.wait();
         console.log("Execution finished successfully");
         await pythonDockerContainer.remove();
 
-        return finalOutput;
+
+         if (finalOutput.stderr) {
+            return { output: finalOutput.stderr };
+
+        } else {
+
+            if ((finalOutput.stdout).trim() === outputCase.trim()) {
+                return { output: finalOutput.stdout, status: "Accepted" }
+            } else {
+                return { status: "Wrong Answer", expected: outputCase, actual: finalOutput.stdout }
+            }
+
+        }
 
     } catch (error) {
-        if (error instanceof Error && error.message === "Time Limit Exceeded") {
+        if (error instanceof Error && error.message === "TLE") {
 
             console.log("Time Limit Exceeded");
 

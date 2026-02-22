@@ -19,6 +19,7 @@ async function createContainer(imagename: string, cmdExecutable: string[]) {
             AttachStderr: true,
             Tty: false,
             HostConfig: {
+                NanoCpus: 1000000000,
                 Memory: 2 * 1024 * 1024 * 1024, //  2GB
             },
             OpenStdin: true,

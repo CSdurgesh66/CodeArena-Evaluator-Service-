@@ -8,9 +8,9 @@ import decodeDockerStream from "./dockerHelper";
 
 
 
-const TIMELIMIT = 2000;
+const TIMELIMIT = 1000;
 
-async function runJava(code: string, inputCase: string) {
+async function runJava(code: string, inputCase: string,outputCase:string) {
 
     console.log("Initialising a new Java docker container");
 
@@ -63,13 +63,25 @@ async function runJava(code: string, inputCase: string) {
         const finalOutput: DockerStreamOutput = await Promise.race([outputPromise, timeoutPromise]) as DockerStreamOutput;
 
         clearTimeout(timerId!);
+        await javaDockerContainer.wait();
         console.log(" Java Execution finished successfully");
         await javaDockerContainer.remove();
 
-        return finalOutput;
+         if (finalOutput.stderr) {
+            return { output: finalOutput.stderr };
+
+        } else {
+
+            if ((finalOutput.stdout).trim() === outputCase.trim()) {
+                return { output: finalOutput.stdout, status: "Accepted" }
+            } else {
+                return { status: "Wrong Answer", expected: outputCase, actual: finalOutput.stdout }
+            }
+
+        }
 
     } catch (error) {
-        if (error instanceof Error && error.message === "Time Limit Exceeded") {
+        if (error instanceof Error && error.message === "TLE") {
 
             console.log("Time Limit Exceeded");
 

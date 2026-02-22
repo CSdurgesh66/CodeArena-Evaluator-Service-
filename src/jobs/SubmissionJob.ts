@@ -1,15 +1,10 @@
-// SampleJob.ts is the file that defines how a job is handle
-
-
-
-// left ********************************** 
-
 
 import { Job } from "bullmq";
 
 import { IJob } from "../types/bullMqJobDefinition";
 import { SubmissionPayload } from "../types/submissionPayload";
 import { getExecutionStrategy } from "../utils/executionStrategyFactory";
+import evaluationQueueProducer from "../producers/evaluationQueueProducer";
 
 export default class SubmissionJob implements IJob {
     name: string;
@@ -28,24 +23,22 @@ export default class SubmissionJob implements IJob {
 
             try {
 
+                let finalCode = data?.code;
+                finalCode = finalCode.replace(/\\n/g, "\n").replace(/\\"/g, '"').replace(/^"|"$/g, "");
+
+                const input = data?.inputCase;
+                const expectedOutput = data?.outputCase?.trim();
+
                 const strategy = getExecutionStrategy(language);
 
                 const finalOutput = await strategy.run(
-                    data?.code,
-                    data?.inputCase
+                    finalCode,
+                    input,
+                    expectedOutput,
                 );
 
-                console.log("Final output:", finalOutput);
+                evaluationQueueProducer({finalOutput, userId:data.userId, submissionId:data.submission_id});
 
-                if (finalOutput.stderr) {
-
-                    console.error("Execution Failed:", finalOutput.stderr);
-
-                } else {
-
-                    console.log("Execution Success:", finalOutput.stdout);
-
-                }
 
             } catch (error) {
                 console.error("Error executing container:", error);

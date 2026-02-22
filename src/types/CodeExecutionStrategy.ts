@@ -1,5 +1,5 @@
-import DockerStreamOutput from "../types/dockerStreamOutput";
+// import DockerStreamOutput from "../types/dockerStreamOutput";
 
 export interface CodeExecutionStrategy {
-  run(code: string, inputCase: string): Promise<DockerStreamOutput>;
+  run(code: string, inputCase: string,outputCase:string):any;
 }

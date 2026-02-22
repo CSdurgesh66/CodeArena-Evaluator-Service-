@@ -3,9 +3,9 @@ import DockerStreamOutput from "../types/dockerStreamOutput";
 import createContainer from "./containerFactory";
 import decodeDockerStream from "./dockerHelper";
 
-const TIMELIMIT = 2000;
+const TIMELIMIT = 5000;
 
-async function runCpp(code: string, inputCase: string) {
+async function runCpp(code: string, inputCase: string, outputCase: string) {
 
     console.log("Initialising a new Cpp docker container");
 
@@ -13,7 +13,7 @@ async function runCpp(code: string, inputCase: string) {
     const b64Input = Buffer.from(inputCase || "").toString('base64');
 
     const cmd = ['/bin/sh', '-c', `echo "${b64Code}" | base64 -d > main.cpp && echo "${b64Input}" | base64 -d > input.txt && g++ -o main main.cpp  && ./main < input.txt`];
-    
+
     const cppDockerContainer = await createContainer(CPP_IMAGE, cmd);
 
     console.log(" Starting container");
@@ -53,17 +53,32 @@ async function runCpp(code: string, inputCase: string) {
     });
 
     try {
-        
+
+
+
         const finalOutput: DockerStreamOutput = await Promise.race([outputPromise, timeoutPromise]) as DockerStreamOutput;
 
         clearTimeout(timerId!);
+        await cppDockerContainer.wait();
         console.log(" Cpp Execution finished successfully");
         await cppDockerContainer.remove();
 
-        return finalOutput;
+        if (finalOutput.stderr) {
+            return { output: finalOutput.stderr };
+
+        } else {
+
+            if ((finalOutput.stdout).trim() === outputCase.trim()) {
+                return { output: finalOutput.stdout, status: "Accepted" }
+            } else {
+                return { status: "Wrong Answer", expected: outputCase, actual: finalOutput.stdout }
+            }
+
+        }
+
 
     } catch (error) {
-        if (error instanceof Error && error.message === "Time Limit Exceeded") {
+        if (error instanceof Error && error.message === "TLE") {
 
             console.log("Time Limit Exceeded");
 
